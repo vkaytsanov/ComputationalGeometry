@@ -1,0 +1,24 @@
+unit 5            - мащаб 5мм
+
+move 8 230
+
+width 1          
+lines
+0 0 10 0
+10 0 5 5
+0 0 5 5
+
+colour .1 .6 .3
+width 1
+points
+2.5 2.5 	- inside
+5 2.5		- inside
+
+colour .7 .2 .3
+width 1
+points
+0 1 		- outside
+5 -1		- outside
+
+
+
