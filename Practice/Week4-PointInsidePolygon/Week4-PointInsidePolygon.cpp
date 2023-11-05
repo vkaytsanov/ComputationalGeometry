@@ -5,14 +5,12 @@
 
 typedef vecta::vec2d<double> Point;
 
-// [ABP] = AB x AP
-template <typename T>
-T GetAreaFromPoints(vecta::vec2d<T> a, vecta::vec2d<T> b, vecta::vec2d<T> p)
+enum class Orientation
 {
-	vecta::vec2d<T> AB = b - a;
-	vecta::vec2d<T> AP = p - a;
-	return AB ^ AP;
-}
+	Colinear,
+	Clockwise,
+	CounterClockWise,
+};
 
 enum class PointLocation
 {
@@ -32,6 +30,41 @@ const char* ToString(PointLocation location)
 	}
 }
 
+// [ABP] = AB x AP
+double GetAreaFromPoints(Point a, Point b, Point p)
+{
+	Point AB = b - a;
+	Point AP = p - a;
+	return AB ^ AP;
+}
+
+Orientation GetOrientation(Point a, Point b, Point p)
+{
+	double area = GetAreaFromPoints(a, b, p);
+	if (area == 0.0)
+	{
+		return Orientation::Colinear;
+	}
+	return area < 0.0 ? Orientation::Clockwise : Orientation::CounterClockWise;
+}
+
+Orientation GetPolygonOrientation(const std::vector<Point>& polygon)
+{
+	double area = 0.0;
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		Point L = polygon[i ? i - 1 : polygon.size() - 1];
+		Point B = polygon[i];
+		Point R = polygon[(i + 1) % polygon.size()];
+		area += GetAreaFromPoints(L, B, R);
+	}
+	if (area == 0.0)
+	{
+		return Orientation::Colinear;
+	}
+	return area < 0.0 ? Orientation::Clockwise : Orientation::CounterClockWise;
+}
+
 template <typename T>
 bool IsBetween(T x, T a, T b)
 {
@@ -39,40 +72,35 @@ bool IsBetween(T x, T a, T b)
 }
 
 
-PointLocation GetPointLocation(const std::vector<Point>& polygon, Point pointToCheck)
+PointLocation GetPointLocation(const std::vector<Point>& polygon, Point P)
 {
+	Orientation polygonOrientation = GetPolygonOrientation(polygon);
 	// The ray is horizontally placed, to fix y
-	Point rayStart = pointToCheck;
-
 	bool inside = false;
 	for (int i = 0; i < polygon.size(); i++)
 	{
-		Point pointA = polygon[i];
-		Point pointB = polygon[(i + 1) % polygon.size()];
+		Point A = polygon[i];
+		Point B = polygon[(i + 1) % polygon.size()];
 
-		Point min = Point(std::min(pointA.x, pointB.x), std::min(pointA.y, pointB.y));
-		Point max = Point(std::max(pointA.x, pointB.x), std::max(pointA.y, pointB.y));
+		Point min = Point(std::min(A.x, B.x), std::min(A.y, B.y));
+		Point max = Point(std::max(A.x, B.x), std::max(A.y, B.y));
 
 		// check for horizontal lines
-		if (pointA.y == pointB.y)
+		if (A.y == B.y)
 		{
 			// it is horizontal
-			if (pointB.y == rayStart.y && IsBetween(rayStart.x, min.x, max.x))
+			if (B.y == P.y && IsBetween(P.x, min.x, max.x))
 			{
 				return PointLocation::Edge;
 			}
 		}
-		else if (IsBetween(rayStart.y, min.y, max.y))
+		else
 		{
 			// Do not count if the ray intersects the vertex twice
-			if (rayStart.y != max.y)
+			if (P.y != max.y)
 			{
-				//if (rayStart.x > min.x)
-				//{
-				//	inside = !inside;
-				//}
-				double product = GetAreaFromPoints(pointA, pointB, pointToCheck);
-				if (product > 0)
+				Orientation orientation = GetOrientation(A, B, P);
+				if (orientation == polygonOrientation)
 				{
 					inside = !inside;
 				}

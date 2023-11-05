@@ -52,7 +52,7 @@ std::vector<Triangle> Earcut(std::vector<Point> polygon)
 			i++;
 		}
 	}
-	triangles.push_back({ polygon[polygon.size() - 1], polygon[0], polygon[1] });
+	triangles.push_back({ polygon[2], polygon[0], polygon[1] });
 	return triangles;
 }
 
