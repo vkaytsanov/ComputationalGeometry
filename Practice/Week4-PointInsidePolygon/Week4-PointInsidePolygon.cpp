@@ -76,7 +76,7 @@ PointLocation GetPointLocation(const std::vector<Point>& polygon, Point P)
 {
 	Orientation polygonOrientation = GetPolygonOrientation(polygon);
 	// The ray is horizontally placed, to fix y
-	bool inside = false;
+	bool inside = true;
 	for (int i = 0; i < polygon.size(); i++)
 	{
 		Point A = polygon[i];
@@ -97,7 +97,7 @@ PointLocation GetPointLocation(const std::vector<Point>& polygon, Point P)
 		else
 		{
 			// Do not count if the ray intersects the vertex twice
-			if (P.y != max.y)
+			if (P.y < max.y && P.y >= min.y)
 			{
 				Orientation orientation = GetOrientation(A, B, P);
 				if (orientation == polygonOrientation)
@@ -132,6 +132,4 @@ int main()
 
 	PointLocation location = GetPointLocation(polygon, pointToCheck);
 	std::cout << ToString(location);
-
-
 }
